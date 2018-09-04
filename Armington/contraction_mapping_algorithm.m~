@@ -2,8 +2,8 @@ clc; clear; % clear data and command window
 
 load 'armington_data.mat';  % load data for 30 countries
 
-w = ones(S,1); % initial value for w
-
+w0 = ones(S,1); % initial value for w
+w =
 tolerance = 1; % initial value for tolerance
                % needs to be greater than do loop
 update = 0.3; % update is weight of new_w for next iteration's w
@@ -23,7 +23,7 @@ while tolerance > 0.00001
     
     new_w = new_w./new_w(1); % numeraire country is first entry
     
-    tolerance = (w-new_w)'*(w-new_w); % could also use sum of squares
+    tolerance = sum(abs(w - new_w)); % could also use sum of squares
     % try to stay close to something nice and boring and well known
     
     disp(['tolerance = ', num2str(tolerance)]); % literally watch tolerance   
@@ -33,28 +33,27 @@ while tolerance > 0.00001
     
 end
 t_cmt = toc;
-
-w0 = ones(S,1); % initial value for w
 tic;
+
+
 w1 = fsolve(@armington,w0);
 t1 = toc;
 
 tic;
-w2 = fminunc(@armington,w0); % more brute force than fsolve
+w2 = fminunc(@system2,x0); % more brute force than fsolve
 t2 = toc;
 
 tic;
-wCheck = fminsearch(@armington,w2);
+wCheck = fminsearch(@system2,w2);
 t3 = toc;
 
 tic;
-wFrom0 = fminsearch(@armington,w0);
+wFrom0 = fminsearch(@system2,w0);
 t4 = toc;
 
 function F1 = armington(w)
-    load 'armington_data.mat';
     Y = w.*L;
-    load('armington_data.mat', 'sigma');
+    
     P =  sum(( a_ij.*repmat(A.^(sigma-1),1,S) .* ...
         (tau_ij.*repmat(w,1,S)).^(1-sigma) ),1)'.^(1./(1-sigma));
     
@@ -65,7 +64,7 @@ function F1 = armington(w)
     
     new_w = new_w./new_w(1);
 
-    F1 = (w-new_w)'*(w-new_w);  
+    F1 = sum(abs(w - new_w));  
 end
 
 
